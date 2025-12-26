@@ -23,10 +23,8 @@ class CommentService{
         ]);
     }
 
-
     //suppression d'un commentaire
-    public function delete(Comment $comment, User $user){
-
+    public function delete(Comment $comment){
         $comment->delete();
     }
 }

@@ -10,7 +10,6 @@ use App\Models\Order;
 class OrderService
 {
 
-
     public function create(User $buyer, Ad $ad)
     {
 
@@ -26,17 +25,14 @@ class OrderService
 
 
     public function confirm(Order $order)
-    {
-
-        //Confirmation de la commande
-
+    {   
+        //confirmation de la commande
         $order->update([
             'status' => 'CONFIRMED'
         ]);
 
         return $order;
     }
-
 
 
     public function cancel(Order $order)
@@ -48,4 +44,14 @@ class OrderService
 
         return $order;
     }
+
+    // Lister les commandes d'un utilisateur (acheteur ou vendeur)
+    public function listForUser(User $user)
+    {
+        return Order::where('buyer_id', $user->id)
+            ->orWhere('seller_id', $user->id)
+            ->latest()
+            ->paginate(10);
+    }
+
 }

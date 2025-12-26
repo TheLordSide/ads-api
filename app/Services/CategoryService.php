@@ -6,7 +6,6 @@ use App\Models\Category;
 
 class CategoryService
 {
-
     //liste des categories
     public function list()
     {
@@ -31,4 +30,5 @@ class CategoryService
     {
         $category->delete();
     }
+    
 }

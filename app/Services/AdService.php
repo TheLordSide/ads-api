@@ -7,7 +7,6 @@ use App\Models\User;
 
 class AdService
 {
-
     //lister les commentaires avec une pagination de 10 par pages
     public function list(array $filter = [])
     {
@@ -25,7 +24,6 @@ class AdService
     //mettre a jour une annonce
     public function update(Ad $ad, array $data)
     {
-
         $ad->update($data);
         return $ad;
     }
@@ -35,4 +33,5 @@ class AdService
     {
         $ad->delete();
     }
+    
 }
