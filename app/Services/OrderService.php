@@ -17,7 +17,7 @@ class OrderService
         return Order::create([
             'ad_id' => $ad->id,
             'buyer_id' => $buyer->id,
-            'seller _id' => $ad->user_id,
+            'seller_id' => $ad->user_id,
             'price' => $ad->price,
             'status' => 'PENDING'
         ]);

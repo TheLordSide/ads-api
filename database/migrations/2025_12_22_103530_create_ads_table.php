@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('ads', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->text('descritption');
+            $table->text('description');
             $table->decimal('price',10,2);
 
             $table->foreignID('user_id')
