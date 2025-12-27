@@ -622,7 +622,6 @@ Content-Type: application/json
 ```json
 {
   "ad_id": 1,
-  "message": "Bonjour, je suis intéressé par votre annonce."
 }
 ```
 
@@ -644,7 +643,6 @@ Content-Type: application/json
       "name": "John Doe"
     },
     "status": "pending",
-    "message": "Bonjour, je suis intéressé par votre annonce.",
     "created_at": "2025-12-27T10:20:00.000000Z"
   }
 }
