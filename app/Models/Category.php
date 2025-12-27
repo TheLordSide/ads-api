@@ -12,7 +12,6 @@ class Category extends Model
 
 //liste de la relation 1->N entre Category et Ad
   public function ad(){
-
     return $this->hasMany(Ad::class);
   }
 }

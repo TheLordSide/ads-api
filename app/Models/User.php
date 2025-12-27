@@ -45,7 +45,6 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-
     // liste des relations 1->N entre User et Ad, Comment, Order
     public function ad(){
         return $this->hasMany(Ad::class);

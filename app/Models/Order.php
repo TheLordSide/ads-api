@@ -13,8 +13,6 @@ class Order extends Model
         'price',
         'status',
     ];
-
-
     //relation N->1 entre Order et Ad,User
     public function ad(){
         return $this->belongsTo(Ad::class);
@@ -27,8 +25,5 @@ class Order extends Model
     public function seller(){
         return $this->belongsTo(User::class,'seller_id');
     }
-
-     
-
 
 }
