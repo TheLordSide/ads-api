@@ -1,708 +1,795 @@
-# ADS API - Plateforme de Petites Annonces
-
-API RESTful complète pour une plateforme de petites annonces avec authentification JWT, gestion des catégories, annonces, commentaires et commandes.
-
-## Table des matières
-
-- [Technologies](#technologies)
-- [Prérequis](#prérequis)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Architecture](#architecture)
-- [Base de données](#base-de-données)
-- [Endpoints API](#endpoints-api)
-- [Exemples de requêtes](#exemples-de-requêtes)
-- [Tests avec Postman](#tests-avec-postman)
-- [Authentification](#authentification)
-
----
-
-## Technologies
-
-- **Laravel** 12.43.1
-- **PHP** 8.2.0
-- **MySQL**
-- **JWT Auth** (tymon/jwt-auth) pour l'authentification
-- **Eloquent ORM** pour la base de données
-
----
-
-## Prérequis
-
-- PHP >= 8.2
-- Composer
-- MySQL >= 5.7
-- Node.js & NPM (optionnel pour le frontend)
-
----
-
-## Installation
-
-### 1. Cloner le projet
-
-```bash
-git clone https://github.com/votre-repo/ads-api.git
-cd ads-api
-```
-
-### 2. Installer les dépendances
-
-```bash
-composer install
-```
-
-### 3. Configurer l'environnement
-
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-
-### 4. Configurer la base de données
-
-Éditez le fichier `.env` :
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=ads_api
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-### 5. Créer la base de données
-
-```sql
-CREATE DATABASE ads_api CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-### 6. Exécuter les migrations
-
-```bash
-php artisan migrate
-```
-
-### 7. Générer la clé secrète JWT
-
-```bash
-php artisan jwt:secret
-```
-
-### 8. Lancer le serveur
-
-```bash
-php artisan serve
-```
-
-L'API est maintenant accessible sur `http://127.0.0.1:8000`
-
----
-
-## Configuration
-
-### JWT Configuration
-
-Dans `config/auth.php` :
-
-```php
-'defaults' => [
-    'guard' => 'api',
-    'passwords' => 'users',
-],
-
-'guards' => [
-    'api' => [
-        'driver' => 'jwt',
-        'provider' => 'users',
-    ],
-],
-```
-
-### CORS (optionnel)
-
-Si vous utilisez un frontend séparé, configurez CORS dans `config/cors.php` :
-
-```php
-'paths' => ['api/*'],
-'allowed_methods' => ['*'],
-'allowed_origins' => ['*'],
-'allowed_headers' => ['*'],
-```
-
----
-
-## Architecture
-
-### Structure du projet
-
-```
-ads-api/
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   │   ├── AuthController.php
-│   │   │   ├── CategoryController.php
-│   │   │   ├── AdController.php
-│   │   │   ├── CommentController.php
-│   │   │   └── OrderController.php
-│   │   ├── Resources/
-│   │   │   ├── ErrorResource.php
-│   │   │   ├── CategoryResource.php
-│   │   │   ├── AdResource.php
-│   │   │   └── ...
-│   │   └── Policies/
-│   │       └── AdPolicy.php
-│   ├── Models/
-│   │   ├── User.php
-│   │   ├── Category.php
-│   │   ├── Ad.php
-│   │   ├── Comment.php
-│   │   └── Order.php
-│   └── Services/
-│       ├── AuthService.php
-│       ├── CategoryService.php
-│       ├── AdService.php
-│       ├── CommentService.php
-│       └── OrderService.php
-├── database/
-│   └── migrations/
-├── routes/
-│   └── api.php
-└── config/
-```
-
-### Pattern Architecture
-
-**Service Pattern** : La logique métier est séparée dans des services
-
-```
-Request → Controller → Service → Model → Database
-                ↓
-            Response
-```
-
-**Avantages** :
-- Code réutilisable
-- Testabilité
-- Séparation des responsabilités
-- Maintenance facilitée
-
----
-
-## Base de données
-
-### Schéma relationnel
-
-```
-users
-├── id
-├── name
-├── email
-├── password
-└── timestamps
-
-categories
-├── id
-├── name
-└── timestamps
-
-ads
-├── id
-├── title
-├── description
-├── price
-├── user_id (FK → users)
-├── category_id (FK → categories)
-└── timestamps
-
-comments
-├── id
-├── content
-├── user_id (FK → users)
-├── ad_id (FK → ads)
-└── timestamps
-
-orders
-├── id
-├── buyer_id (FK → users)
-├── seller_id (FK → users)
-├── ad_id (FK → ads)
-├── status (pending, confirmed, cancelled)
-├── message
-└── timestamps
-```
-
-### Relations
-
-- **User** `1 → N` **Ad** (Un utilisateur peut créer plusieurs annonces)
-- **User** `1 → N` **Comment** (Un utilisateur peut créer plusieurs commentaires)
-- **Category** `1 → N` **Ad** (Une catégorie contient plusieurs annonces)
-- **Ad** `1 → N` **Comment** (Une annonce peut avoir plusieurs commentaires)
-- **Ad** `1 → N` **Order** (Une annonce peut avoir plusieurs commandes)
-
----
-
-## Endpoints API
-
-### Base URL
-
-```
-http://127.0.0.1:8000/api
-```
-
-### 1. Authentification
-
-| Méthode | Endpoint | Description | Auth requise |
-|---------|----------|-------------|--------------|
-| POST | `/auth/register` | Inscription utilisateur | Non |
-| POST | `/auth/login` | Connexion utilisateur | Non |
-| GET | `/auth/me` | Récupérer utilisateur connecté | Oui |
-| POST | `/auth/logout` | Déconnexion | Oui |
-| POST | `/auth/refresh` | Rafraîchir token JWT | Oui |
-
-### 2. Catégories
-
-| Méthode | Endpoint | Description | Auth requise |
-|---------|----------|-------------|--------------|
-| GET | `/categories` | Lister toutes les catégories | Non |
-| POST | `/categories` | Créer une catégorie | Oui |
-| PUT | `/categories/{id}` | Mettre à jour une catégorie | Oui |
-| DELETE | `/categories/{id}` | Supprimer une catégorie | Oui |
-
-### 3. Annonces
-
-| Méthode | Endpoint | Description | Auth requise |
-|---------|----------|-------------|--------------|
-| GET | `/ads` | Lister toutes les annonces | Non |
-| GET | `/ads/search` | Recherche intelligente | Non |
-| GET | `/ads/{id}` | Détail d'une annonce | Non |
-| POST | `/ads` | Créer une annonce | Oui |
-| PUT | `/ads/{id}` | Modifier annonce (auteur) | Oui |
-| DELETE | `/ads/{id}` | Supprimer annonce (auteur) | Oui |
-
-### 4. Commentaires
-
-| Méthode | Endpoint | Description | Auth requise |
-|---------|----------|-------------|--------------|
-| GET | `/ads/{adId}/comments` | Lister commentaires d'une annonce | Non |
-| POST | `/ads/{adId}/comments` | Ajouter un commentaire | Oui |
-| DELETE | `/comments/{id}` | Supprimer son propre commentaire | Oui |
-
-### 5. Commandes
-
-| Méthode | Endpoint | Description | Auth requise |
-|---------|----------|-------------|--------------|
-| POST | `/orders` | Passer une commande | Oui |
-| GET | `/orders/me` | Lister mes commandes | Oui |
-| PUT | `/orders/{id}/confirm` | Confirmer commande (vendeur) | Oui |
-| PUT | `/orders/{id}/cancel` | Annuler commande | Oui |
-
----
-
-## Exemples de requêtes
-
-### 1. Inscription
-
-**Endpoint** : `POST /api/auth/register`
-
-**Body** :
-```json
 {
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123",
-  "password_confirmation": "password123"
+	"info": {
+		"_postman_id": "1ac4ec63-bc36-4543-9693-da63db00c614",
+		"name": "ADS API",
+		"description": "Collection complète pour l'API de petites annonces avec authentification JWT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17652814"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"auth": {
+							"type": "bearer"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Jean Claude\",\n  \"email\": \"claude@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "**Inscription utilisateur**\n\n**Auth required:** Non\n\n**Body parameters:**\n- `name` (string, required): Nom complet\n- `email` (string, required): Email unique\n- `password` (string, required): Mot de passe (min 8 caractères)\n- `password_confirmation` (string, required): Confirmation du mot de passe\n\n**Response:** Utilisateur créé + token JWT"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.access_token) {",
+									"    pm.collectionVariables.set('token', response.access_token);",
+									"    console.log('Token saved:', response.access_token);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"van@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "**Connexion utilisateur**\n\n**Auth required:** Non\n\n**Body parameters:**\n- `email` (string, required): Email de l'utilisateur\n- `password` (string, required): Mot de passe\n\n**Response:** Token JWT + informations utilisateur\n\n**Note:** Le token est automatiquement sauvegardé dans la variable {{token}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Me",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"description": "**Récupérer utilisateur connecté**\n\n**Auth required:** Oui (auth:api)\n\n**Headers:**\n- `Authorization: Bearer {{token}}`\n\n**Response:** Informations de l'utilisateur authentifié"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.access_token) {",
+									"    pm.collectionVariables.set('token', response.access_token);",
+									"    console.log('Token refreshed:', response.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "**Rafraîchir token JWT**\n\n**Auth required:** Oui (auth:api)\n\n**Headers:**\n- `Authorization: Bearer {{token}}`\n\n**Response:** Nouveau token JWT\n\n**Note:** Le nouveau token est automatiquement sauvegardé"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"description": "**Déconnexion**\n\n**Auth required:** Oui (auth:api)\n\n**Headers:**\n- `Authorization: Bearer {{token}}`\n\n**Response:** Message de confirmation\n\n**Note:** Invalide le token JWT côté serveur"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion de l'authentification avec JWT"
+		},
+		{
+			"name": "Category",
+			"item": [
+				{
+					"name": "List Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories"
+							]
+						},
+						"description": "**Lister toutes catégories**\n\n**Auth required:** Non\n\n**Response:** Liste complète des catégories disponibles\n\n**Use case:** Afficher les catégories dans un dropdown ou menu"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Smartphones\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories"
+							]
+						},
+						"description": "**Créer une catégorie**\n\n**Auth required:** Oui (auth:api)\n\n**Body parameters:**\n- `name` (string, required): Nom unique de la catégorie\n\n**Validation:**\n- Le nom doit être unique dans la table categories\n\n**Response:** Catégorie créée avec son ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"transport\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories/4",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories",
+								"4"
+							]
+						},
+						"description": "**Mettre à jour une catégorie**\n\n**Auth required:** Oui (auth:api)\n\n**URL parameters:**\n- `id` (integer, required): ID de la catégorie\n\n**Body parameters:**\n- `name` (string, required): Nouveau nom (doit rester unique)\n\n**Response:** Catégorie mise à jour"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories",
+								"1"
+							]
+						},
+						"description": "**Supprimer une catégorie**\n\n**Auth required:** Oui (auth:api)\n\n**URL parameters:**\n- `id` (integer, required): ID de la catégorie\n\n**Response:** 204 No Content\n\n**Note:** Assurez-vous qu'aucune annonce n'utilise cette catégorie"
+					},
+					"response": []
+				}
+			],
+			"description": "CRUD des catégories d'une annonce"
+		},
+		{
+			"name": "Ad",
+			"item": [
+				{
+					"name": "List Ads",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ads?page=1&per_page=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ads"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Numéro de page"
+								},
+								{
+									"key": "per_page",
+									"value": "10",
+									"description": "Nombre d'éléments par page"
+								}
+							]
+						},
+						"description": "**Lister toutes annonces**\n\n**Auth required:** Non\n\n**Query parameters:**\n\n- `page` (integer, optional): Numéro de page (défaut: 1)\n    \n- `per_page` (integer, optional): Éléments par page (défaut: 10)\n    \n\n**Response:** Liste paginée des annonces avec métadonnées"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Ads",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{base_url}}/ads/search?category_id=1&min_price=500&sort=oldest",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ads",
+								"search"
+							],
+							"query": [
+								{
+									"key": "category_id",
+									"value": "1"
+								},
+								{
+									"key": "min_price",
+									"value": "500"
+								},
+								{
+									"key": "sort",
+									"value": "oldest"
+								}
+							]
+						},
+						"description": "**Recherche intelligente**\n\n**Auth required:** Non\n\n**Query parameters:**\n\n- `q` (string, optional): Terme de recherche (titre, description)\n    \n- `category_id` (integer, optional): ID de la catégorie\n    \n- `min_price` (decimal, optional): Prix minimum\n    \n- `max_price` (decimal, optional): Prix maximum\n    \n- `max_price` (string, optional): Tri des résultats (`price_asc`, `price_desc`, oldest,`latest)`\n    \n\n**Response:** Annonces filtrées selon critères"
+					},
+					"response": []
+				},
+				{
+					"name": "Show Ad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ads/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ads",
+								"2"
+							]
+						},
+						"description": "**Détail annonce**\n\n**Auth required:** Non\n\n**URL parameters:**\n- `id` (integer, required): ID de l'annonce\n\n**Response:** Détails complets de l'annonce avec relations (auteur, catégorie, commentaires)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Ad",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Redmi Note\",\n  \"description\": \"Redmi Phone neuf\",\n  \"price\": 1099.99,\n  \"category_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/ads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ads"
+							]
+						},
+						"description": "**Créer annonce**\n\n**Auth required:** Oui (auth:api)\n\n**Body parameters:**\n\n- `title` (string, required): Titre de l'annonce\n    \n- `description` (text, required): Description détaillée\n    \n- `price` (decimal, required): Prix en devise locale\n    \n- `category_id` (integer, required): ID de la catégorie\n    \n\n**Response:** Annonce créée avec ID et user_id de l'auteur"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Ad",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"iPhone 13 Pro - Prix réduit\",\n  \"description\": \"iPhone en excellent état, jamais réparé. Prix négociable.\",\n  \"price\": 649.99,\n  \"category_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/ads/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ads",
+								"2"
+							]
+						},
+						"description": "**Modifier annonce (auteur)**\n\n**Auth required:** Oui (auth:api)\n\n**URL parameters:**\n- `id` (integer, required): ID de l'annonce\n\n**Body parameters:**\n- Mêmes paramètres que la création (tous optionnels)\n\n**Authorization:** Seul l'auteur peut modifier son annonce\n\n**Response:** Annonce mise à jour"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Ad",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ads/5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ads",
+								"5"
+							]
+						},
+						"description": "**Supprimer annonce (auteur)**\n\n**Auth required:** Oui (auth:api)\n\n**URL parameters:**\n- `id` (integer, required): ID de l'annonce\n\n**Authorization:** Seul l'auteur peut supprimer son annonce\n\n**Response:** 204 No Content"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion des annonces"
+		},
+		{
+			"name": "Comment",
+			"item": [
+				{
+					"name": "List Comments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ads/2/comments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ads",
+								"2",
+								"comments"
+							]
+						},
+						"description": "**Lister commentaires d'une annonce**\n\n**Auth required:** Non\n\n**URL parameters:**\n- `adId` (integer, required): ID de l'annonce\n\n**Response:** Liste des commentaires avec informations sur les auteurs"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Comment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Est-ce que le prix est négociable ?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/ads/2/comments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ads",
+								"2",
+								"comments"
+							]
+						},
+						"description": "**Ajouter commentaire**\n\n**Auth required:** Oui (auth:api)\n\n**URL parameters:**\n- `adId` (integer, required): ID de l'annonce\n\n**Body parameters:**\n- `content` (text, required): Contenu du commentaire\n\n**Response:** Commentaire créé avec user_id et ad_id"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Comment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/comments/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"comments",
+								"2"
+							]
+						},
+						"description": "**Supprimer son propre commentaire**\n\n**Auth required:** Oui (auth:api)\n\n**URL parameters:**\n- `id` (integer, required): ID du commentaire\n\n**Authorization:** Seul l'auteur peut supprimer son commentaire\n\n**Response:** 204 No Content"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion des commentaires sur les annonces"
+		},
+		{
+			"name": "Order",
+			"item": [
+				{
+					"name": "Create Order",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						},
+						"description": "**Passer commande**\n\n**Auth required:** Oui\n\n**Body parameters:**\n\n- `ad_id` (integer, required): ID de l'annonce\n    \n\n**Response:** Commande créée avec statut 'pending'\n\n**Note:** L'utilisateur connecté devient l'acheteur (buyer_id)\n\nle seller_id porvient de l'annonce"
+					},
+					"response": []
+				},
+				{
+					"name": "My Orders",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/orders/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								"me"
+							]
+						},
+						"description": "**Lister commandes acheteur ou vendeur**\n\n**Auth required:** Oui\n\n**Response:** Commandes où l'utilisateur est acheteur OU vendeur\n\n**Use case:** Tableau de bord personnel des transactions"
+					},
+					"response": []
+				},
+				{
+					"name": "Confirm Order",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/orders/2/confirm",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								"2",
+								"confirm"
+							]
+						},
+						"description": "**Confirmer commande (vendeur)**\n\n**Auth required:** Oui\n\n**URL parameters:**\n\n- `id` (integer, required): ID de la commande\n    \n\n**Authorization:** Seul le vendeur de l'annonce peut confirmer\n\n**Response:** Commande avec statut 'confirmed'\n\n**Use case:** Le vendeur accepte la transaction"
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Order",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/orders/2/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								"2",
+								"cancel"
+							]
+						},
+						"description": "**Annuler commande (acheteur ou vendeur)**\n\n**Auth required:** Oui (auth:api)\n\n**URL parameters:**\n- `id` (integer, required): ID de la commande\n\n**Authorization:** L'acheteur OU le vendeur peut annuler\n\n**Response:** Commande avec statut 'cancelled'\n\n**Use case:** Annulation par l'une des parties"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion des commandes entre acheteurs et vendeurs"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000/api"
+		},
+		{
+			"key": "token",
+			"value": ""
+		}
+	]
 }
-```
-
-**Réponse** (201) :
-```json
-{
-  "status": "success",
-  "message": "User registered successfully",
-  "data": {
-    "id": 1,
-    "name": "John Doe",
-    "email": "john@example.com",
-    "created_at": "2025-12-27T10:00:00.000000Z"
-  }
-}
-```
-
-### 2. Connexion
-
-**Endpoint** : `POST /api/auth/login`
-
-**Body** :
-```json
-{
-  "email": "john@example.com",
-  "password": "password123"
-}
-```
-
-**Réponse** (200) :
-```json
-{
-  "status": "success",
-  "message": "Login successful",
-  "data": {
-    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-    "token_type": "bearer",
-    "expires_in": 3600
-  }
-}
-```
-
-### 3. Créer une catégorie
-
-**Endpoint** : `POST /api/categories`
-
-**Headers** :
-```
-Authorization: Bearer {votre_token}
-Content-Type: application/json
-```
-
-**Body** :
-```json
-{
-  "name": "Électronique"
-}
-```
-
-**Réponse** (201) :
-```json
-{
-  "data": {
-    "id": 1,
-    "name": "Électronique",
-    "created_at": "2025-12-27T10:05:00.000000Z"
-  }
-}
-```
-
-### 4. Créer une annonce
-
-**Endpoint** : `POST /api/ads`
-
-**Headers** :
-```
-Authorization: Bearer {votre_token}
-Content-Type: application/json
-```
-
-**Body** :
-```json
-{
-  "title": "iPhone 13 Pro",
-  "description": "iPhone en excellent état, jamais réparé",
-  "price": 699.99,
-  "category_id": 1
-}
-```
-
-**Réponse** (201) :
-```json
-{
-  "data": {
-    "id": 1,
-    "title": "iPhone 13 Pro",
-    "description": "iPhone en excellent état, jamais réparé",
-    "price": 699.99,
-    "user_id": 1,
-    "category_id": 1,
-    "created_at": "2025-12-27T10:10:00.000000Z"
-  }
-}
-```
-
-### 5. Lister les annonces avec pagination
-
-**Endpoint** : `GET /api/ads?page=1&per_page=10`
-
-**Réponse** (200) :
-```json
-{
-  "data": [
-    {
-      "id": 1,
-      "title": "iPhone 13 Pro",
-      "description": "iPhone en excellent état",
-      "price": 699.99,
-      "user": {
-        "id": 1,
-        "name": "John Doe"
-      },
-      "category": {
-        "id": 1,
-        "name": "Électronique"
-      },
-      "created_at": "2025-12-27T10:10:00.000000Z"
-    }
-  ],
-  "links": {
-    "first": "http://127.0.0.1:8000/api/ads?page=1",
-    "last": "http://127.0.0.1:8000/api/ads?page=1",
-    "prev": null,
-    "next": null
-  },
-  "meta": {
-    "current_page": 1,
-    "from": 1,
-    "last_page": 1,
-    "per_page": 10,
-    "to": 1,
-    "total": 1
-  }
-}
-```
-
-### 6. Rechercher des annonces
-
-**Endpoint** : `GET /api/ads/search?q=iphone&category_id=1&min_price=500&max_price=1000`
-
-**Réponse** (200) :
-```json
-{
-  "data": [
-    {
-      "id": 1,
-      "title": "iPhone 13 Pro",
-      "price": 699.99,
-      "category": {
-        "name": "Électronique"
-      }
-    }
-  ]
-}
-```
-
-### 7. Ajouter un commentaire
-
-**Endpoint** : `POST /api/ads/1/comments`
-
-**Headers** :
-```
-Authorization: Bearer {votre_token}
-Content-Type: application/json
-```
-
-**Body** :
-```json
-{
-  "content": "Est-ce que le prix est négociable ?"
-}
-```
-
-**Réponse** (201) :
-```json
-{
-  "data": {
-    "id": 1,
-    "content": "Est-ce que le prix est négociable ?",
-    "user": {
-      "id": 2,
-      "name": "Jane Smith"
-    },
-    "ad_id": 1,
-    "created_at": "2025-12-27T10:15:00.000000Z"
-  }
-}
-```
-
-### 8. Passer une commande
-
-**Endpoint** : `POST /api/orders`
-
-**Headers** :
-```
-Authorization: Bearer {votre_token}
-Content-Type: application/json
-```
-
-**Body** :
-```json
-{
-  "ad_id": 1,
-  "message": "Bonjour, je suis intéressé par votre annonce."
-}
-```
-
-**Réponse** (201) :
-```json
-{
-  "data": {
-    "id": 1,
-    "ad": {
-      "id": 1,
-      "title": "iPhone 13 Pro"
-    },
-    "buyer": {
-      "id": 2,
-      "name": "Jane Smith"
-    },
-    "seller": {
-      "id": 1,
-      "name": "John Doe"
-    },
-    "status": "pending",
-    "message": "Bonjour, je suis intéressé par votre annonce.",
-    "created_at": "2025-12-27T10:20:00.000000Z"
-  }
-}
-```
-
----
-
-## Tests avec Postman
-
-### Importer la collection
-
-1. Téléchargez le fichier [ADS_API_Collection.json](./postman_collection.json)
-2. Dans Postman, cliquez sur **Import**
-3. Sélectionnez le fichier JSON
-4. La collection complète sera importée
-
-### Configuration des variables
-
-La collection utilise deux variables :
-- `base_url` : http://127.0.0.1:8000/api
-- `token` : Automatiquement rempli après login
-
-### Workflow recommandé
-
-1. **Register** → Créer un compte
-2. **Login** → Se connecter (le token est auto-sauvegardé)
-3. **Create Category** → Créer des catégories
-4. **Create Ad** → Créer des annonces
-5. **List Ads** → Voir toutes les annonces
-6. Tester les autres endpoints...
-
----
-
-## Authentification
-
-### Format du token JWT
-
-Toutes les routes protégées nécessitent un header d'authentification :
-
-```
-Authorization: Bearer {votre_token_jwt}
-```
-
-### Durée de validité
-
-Le token JWT expire après **60 minutes** par défaut. Utilisez `/api/auth/refresh` pour obtenir un nouveau token.
-
-### Gestion des erreurs d'authentification
-
-**401 Unauthenticated** :
-```json
-{
-  "status": "error",
-  "message": "Unauthenticated"
-}
-```
-
-**403 Forbidden** :
-```json
-{
-  "status": "error",
-  "message": "Unauthorized action"
-}
-```
-
----
-
-## Gestion des erreurs
-
-### Format standard des erreurs
-
-```json
-{
-  "status": "error",
-  "message": "Description de l'erreur"
-}
-```
-
-### Codes HTTP utilisés
-
-- **200** : Succès
-- **201** : Ressource créée
-- **204** : Suppression réussie (pas de contenu)
-- **401** : Non authentifié
-- **403** : Action non autorisée
-- **404** : Ressource non trouvée
-- **422** : Erreur de validation
-- **500** : Erreur serveur
-
----
-
-## Règles métier importantes
-
-### Catégories
-- Le nom de la catégorie doit être unique
-- Impossible de supprimer une catégorie contenant des annonces
-
-### Annonces
-- Seul l'auteur peut modifier ou supprimer son annonce
-- Une annonce doit obligatoirement avoir une catégorie valide
-- Le prix doit être un nombre positif
-
-### Commentaires
-- Seul l'auteur peut supprimer son commentaire
-- Un commentaire doit être lié à une annonce existante
-
-### Commandes
-- Le vendeur peut confirmer une commande
-- L'acheteur ou le vendeur peuvent annuler une commande
-- Les statuts possibles : `pending`, `confirmed`, `cancelled`
-
----
-
-## Sécurité
-
-### Bonnes pratiques implémentées
-
-- Authentification JWT
-- Hachage des mots de passe (bcrypt)
-- Validation des données entrantes
-- Policies pour l'autorisation
-- Protection CSRF désactivée pour l'API
-- Rate limiting (optionnel)
-
-### Recommandations production
-
-- Activer HTTPS
-- Configurer CORS correctement
-- Utiliser des variables d'environnement sécurisées
-- Mettre en place un rate limiting
-- Logger les tentatives de connexion échouées
-
----
-
-## Licence
-
-MIT License
-
----
-
-## Support
-
-Pour toute question ou problème :
-- Email : support@ads-api.com
-- Issues GitHub : https://github.com/votre-repo/ads-api/issues
-
----
-
-## Changelog
-
-### v1.0.0 (2025-12-27)
-- Lancement initial de l'API
-- Authentification JWT
-- CRUD complet pour catégories, annonces, commentaires, commandes
-- Recherche intelligente d'annonces
-- Pagination
-- Gestion des autorisations
