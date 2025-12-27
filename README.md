@@ -398,6 +398,8 @@ http://127.0.0.1:8000/api
 
 ## Exemples de requêtes
 
+Les responses sont grandement simplifiés. Consultez le fichier [ADS_API_Collection.json](./postman_collection.json).
+
 ### 1. Inscription
 
 **Endpoint** : `POST /api/auth/register`
