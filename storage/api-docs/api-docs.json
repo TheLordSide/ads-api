@@ -1,0 +1,26 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Ads API",
+        "description": "API pour gérer les annonces, utilisateurs, commandes, catégories et commentaires",
+        "contact": {
+            "name": "Support Ads API",
+            "email": "support@example.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000/api",
+            "description": "Serveur local"
+        },
+        {
+            "url": "https://votre-domaine.com/api",
+            "description": "Serveur de production"
+        }
+    ],
+    "paths": {
+        "/api": {}
+    },
+    "tags": []
+}
