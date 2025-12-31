@@ -218,8 +218,7 @@ Request → Controller → Service → Model → Database
 ---
 
 ## Base de données
-
-
+Consulter le fichier complet [ads_api.sql](./ads_api.sql).
 
 ### Schéma relationnel
 
@@ -399,7 +398,8 @@ http://127.0.0.1:8000/api
 ---
 
 ## Exemples de requêtes
-Consulter le fichier complet [ads_api.sql](./ads_api.sql).
+
+Les responses sont grandement simplifiés. Consultez le fichier [ADS_API_Collection.json](./postman_collection.json).
 
 ### 1. Inscription
 
