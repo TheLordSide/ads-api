@@ -25,12 +25,12 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"Jean Claude\",\n  \"email\": \"claude@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}"
+							"raw": "{\n  \"name\": \"van damme\",\n  \"email\": \"damme@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/auth/register",
+							"raw": "{{prod_url}}/auth/register",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"auth",
@@ -70,12 +70,12 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"van@example.com\",\n  \"password\": \"password123\"\n}"
+							"raw": "{\n  \"email\": \"damme@example.com\",\n  \"password\": \"password123\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/auth/login",
+							"raw": "{{prod_url}}/auth/login",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"auth",
@@ -102,9 +102,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/auth/me",
+							"raw": "{{prod_url}}/auth/me",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"auth",
@@ -128,7 +128,9 @@
 									"    console.log('Token refreshed:', response.access_token);",
 									"}"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -146,9 +148,9 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/auth/refresh",
+							"raw": "{{prod_url}}/auth/refresh",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"auth",
@@ -175,9 +177,9 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/auth/logout",
+							"raw": "{{prod_url}}/auth/logout",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"auth",
@@ -200,9 +202,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/categories",
+							"raw": "{{prod_url}}/categories",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"categories"
@@ -237,9 +239,9 @@
 							"raw": "{\n  \"name\": \"Smartphones\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/categories",
+							"raw": "{{prod_url}}/categories",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"categories"
@@ -328,9 +330,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/ads?page=1&per_page=10",
+							"raw": "{{prod_url}}/ads?page=1&per_page=10",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"ads"
@@ -365,9 +367,9 @@
 							"formdata": []
 						},
 						"url": {
-							"raw": "{{base_url}}/ads/search?category_id=1&min_price=500&sort=oldest",
+							"raw": "{{prod_url}}/ads/search?category_id=1&min_price=500&sort=oldest",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"ads",
@@ -436,9 +438,9 @@
 							"raw": "{\n  \"title\": \"Redmi Note\",\n  \"description\": \"Redmi Phone neuf\",\n  \"price\": 1099.99,\n  \"category_id\": 1\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/ads",
+							"raw": "{{prod_url}}/ads",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"ads"
@@ -473,9 +475,9 @@
 							"raw": "{\n  \"title\": \"iPhone 13 Pro - Prix réduit\",\n  \"description\": \"iPhone en excellent état, jamais réparé. Prix négociable.\",\n  \"price\": 649.99,\n  \"category_id\": 1\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/ads/2",
+							"raw": "{{prod_url}}/ads/2",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"ads",
@@ -502,9 +504,9 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/ads/5",
+							"raw": "{{prod_url}}/ads/5",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"ads",
@@ -527,9 +529,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/ads/2/comments",
+							"raw": "{{prod_url}}/ads/2/comments",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"ads",
@@ -566,9 +568,9 @@
 							"raw": "{\n  \"content\": \"Est-ce que le prix est négociable ?\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/ads/2/comments",
+							"raw": "{{prod_url}}s/ads/2/comments",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}s"
 							],
 							"path": [
 								"ads",
@@ -596,9 +598,9 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/comments/2",
+							"raw": "{{prod_url}}/comments/2",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"comments",
@@ -635,10 +637,19 @@
 								"value": "application/json"
 							}
 						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ad_id\" : 4 \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
-							"raw": "{{base_url}}/orders",
+							"raw": "{{prod_url}}/orders",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"orders"
@@ -671,9 +682,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/orders/me",
+							"raw": "{{prod_url}}/orders/me",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"orders",
@@ -700,13 +711,13 @@
 						"method": "PUT",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/orders/2/confirm",
+							"raw": "{{prod_url}}/orders/4/confirm",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"orders",
-								"2",
+								"4",
 								"confirm"
 							]
 						},
@@ -730,13 +741,13 @@
 						"method": "PUT",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/orders/2/cancel",
+							"raw": "{{prod_url}}/orders/4/cancel",
 							"host": [
-								"{{base_url}}"
+								"{{prod_url}}"
 							],
 							"path": [
 								"orders",
-								"2",
+								"4",
 								"cancel"
 							]
 						},
@@ -789,6 +800,13 @@
 		},
 		{
 			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "prod_url",
+			"value": ""
+		},
+		{
 			"value": ""
 		}
 	]
