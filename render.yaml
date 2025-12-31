@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: soutom
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: https://soutom-api.onrender.com/
+      - key: APP_KEY
+        value: base64:ydIWkYyPxgDRKZ5KbRs3Rnf8/cT+9i7dOiUdTHGJXjA=
