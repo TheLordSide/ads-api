@@ -219,6 +219,8 @@ Request → Controller → Service → Model → Database
 
 ## Base de données
 
+
+
 ### Schéma relationnel
 
 #### Table: users
@@ -397,8 +399,7 @@ http://127.0.0.1:8000/api
 ---
 
 ## Exemples de requêtes
-
-Les responses sont grandement simplifiés. Consultez le fichier [ADS_API_Collection.json](./postman_collection.json).
+Consulter le fichier complet [ads_api.sql](./ads_api.sql).
 
 ### 1. Inscription
 
@@ -769,37 +770,3 @@ Le token JWT expire après **60 minutes** par défaut. Utilisez `/api/auth/refre
 - Policies pour l'autorisation
 - Protection CSRF désactivée pour l'API
 - Rate limiting (optionnel)
-
-### Recommandations production
-
-- Activer HTTPS
-- Configurer CORS correctement
-- Utiliser des variables d'environnement sécurisées
-- Mettre en place un rate limiting
-- Logger les tentatives de connexion échouées
-
----
-
-## Licence
-
-MIT License
-
----
-
-## Support
-
-Pour toute question ou problème :
-- Email : cedricaguigah@gmail.com
-- Issues GitHub : https://github.com/votre-repo/ads-api/issues
-
----
-
-## Changelog
-
-### v1.0.0 (2025-12-27)
-- Lancement initial de l'API
-- Authentification JWT
-- CRUD complet pour catégories, annonces, commentaires, commandes
-- Recherche intelligente d'annonces
-- Pagination
-- Gestion des autorisations
