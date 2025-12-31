@@ -401,6 +401,13 @@ http://127.0.0.1:8000/api
 
 Les responses sont grandement simplifiés. Consultez le fichier [ADS_API_Collection.json](./postman_collection.json).
 
+vous pouvez acceder aux endpoints une fois le server allumé via scramble a l'adresse :
+
+```bash
+http://127.0.0.1:8000/docs/api#/
+```
+
+
 ### 1. Inscription
 
 **Endpoint** : `POST /api/auth/register`
