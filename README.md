@@ -204,7 +204,7 @@ ADS-API/
 **Service Pattern** : La logique métier est séparée dans des services
 
 ```
-Request → Controller → Service → Model → Database
+Request → Controller → Policy → Service → Model → Database
                 ↓
             Response
 ```
